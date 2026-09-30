@@ -170,12 +170,14 @@ test("transformer readouts show measurements and flag stale values", () => {
   const run = dashboard();
   const normal = run("renderTransformer(getScenario().substations[0], getScenario().substations[0].transformers[0])");
   assert.match(normal, /class="transformer-readout"/);
+  assert.match(normal, /<div class="transformer-visual[^"]*">\s*<span class="wire-port output" data-port-type="transformer-output"/);
   for (const label of ["HV", "LV", "P", "I", "PF", "TEMP"]) assert.match(normal, new RegExp(`<dt>${label}</dt>`));
   assert.doesNotMatch(normal, /LAST KNOWN/);
   run('appState.activeEvent = "commLost"');
   const stale = run("renderTransformer(getScenario().substations[2], getScenario().substations[2].transformers[0])");
   assert.match(stale, /LAST KNOWN/);
   const css = fs.readFileSync(path.join(__dirname, "styles.css"), "utf8");
+  assert.match(css, /\.transformer-visual > \.wire-port\.output\s*\{\s*bottom:\s*-7px/);
   assert.match(css, /\.transformer-readout\s*\{[^}]*right:\s*calc\(50% \+ 44px\)/);
   assert.match(css, /\.substation-row\s*\{[^}]*padding-left:\s*48px/);
   assert.match(css, /\.section-bus \.bus-caption\s*\{[^}]*background:\s*transparent;[^}]*text-shadow:/);

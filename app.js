@@ -444,7 +444,6 @@ function renderTransformer(substation, transformer) {
   return `
     <section class="transformer-card ${state} ${featured}" data-equipment="${transformer.id}" tabindex="0">
       <span class="wire-port input" data-port-type="transformer-input" data-port-id="${transformer.id}" title="Connect NGCP source"></span>
-      <span class="wire-port output" data-port-type="transformer-output" data-port-id="${transformer.id}" title="Drag to a feeder"></span>
       <div class="transformer-line ${state}"></div>
       <span class="bay-breaker ${transformer.breaker === "CLOSED" ? "closed" : "open"}" aria-label="Breaker ${transformer.breaker}"></span>
       <div class="transformer-readout" role="group" aria-label="${substation.name} ${transformer.name} ${transformer.quality === "STALE" ? "last known" : "simulated"} measurements">
@@ -459,7 +458,8 @@ function renderTransformer(substation, transformer) {
         </dl>
         ${transformer.quality === "STALE" ? '<span class="readout-quality">LAST KNOWN</span>' : ""}
       </div>
-      <div class="transformer-visual ${state}" aria-hidden="true">
+      <div class="transformer-visual ${state}">
+        <span class="wire-port output" data-port-type="transformer-output" data-port-id="${transformer.id}" title="Drag to a feeder"></span>
         <span class="coil left"></span>
         <span class="coil right"></span>
         <span class="fan fan-a ${transformer.fan.toLowerCase()}"></span>

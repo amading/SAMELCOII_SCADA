@@ -120,7 +120,7 @@ button:focus-visible, [tabindex="0"]:focus-visible { outline: 2px solid #fff; ou
 .wire-port.output { cursor: crosshair; }
 .ngcp-node .wire-port.output { top: 100%; left: calc(50% - 7px); }
 .transformer-card .wire-port.input { top: -7px; left: calc(50% - 7px); }
-.transformer-card .wire-port.output { bottom: -7px; left: calc(50% - 7px); }
+.transformer-visual > .wire-port.output { bottom: -7px; left: calc(50% - 7px); }
 .feeder-card .wire-port.input { top: -7px; left: calc(50% - 7px); }
 .substation-card, .bus-label, .power-bus, .feeder-card { position: relative; z-index: 2; }
 .vertical-drop { position: relative; width: 4px; height: 16px; margin: auto; }
