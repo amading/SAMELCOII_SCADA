@@ -158,3 +158,25 @@ test("visual power effects follow energized state and respect reduced motion", (
   assert.match(css, /\.feeder-card\.stale \.load-bar span\s*\{[^}]*background:\s*var\(--amber\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)\s*\{[^}]*\.transformer-visual\.energized[^}]*animation:\s*none;/);
 });
+
+test("transformer drops run vertically into their bus and end at its edge when offset", () => {
+  const run = dashboard();
+  assert.equal(run("routeTransformerDrop({ x: 50, y: 10 }, 100, 20, 80)"), "M 50 10 V 100");
+  assert.equal(run("routeTransformerDrop({ x: 10, y: 10 }, 100, 20, 80)"), "M 10 10 V 100 H 20");
+  assert.equal(run("routeTransformerDrop({ x: 90, y: 10 }, 100, 20, 80)"), "M 90 10 V 100 H 80");
+});
+
+test("transformer readouts show measurements and flag stale values", () => {
+  const run = dashboard();
+  const normal = run("renderTransformer(getScenario().substations[0], getScenario().substations[0].transformers[0])");
+  assert.match(normal, /class="transformer-readout"/);
+  for (const label of ["HV", "LV", "P", "I", "PF", "TEMP"]) assert.match(normal, new RegExp(`<dt>${label}</dt>`));
+  assert.doesNotMatch(normal, /LAST KNOWN/);
+  run('appState.activeEvent = "commLost"');
+  const stale = run("renderTransformer(getScenario().substations[2], getScenario().substations[2].transformers[0])");
+  assert.match(stale, /LAST KNOWN/);
+  const css = fs.readFileSync(path.join(__dirname, "styles.css"), "utf8");
+  assert.match(css, /\.transformer-readout\s*\{[^}]*right:\s*calc\(50% \+ 44px\)/);
+  assert.match(css, /\.substation-row\s*\{[^}]*padding-left:\s*48px/);
+  assert.match(css, /\.section-bus \.bus-caption\s*\{[^}]*background:\s*transparent;[^}]*text-shadow:/);
+});

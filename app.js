@@ -447,6 +447,18 @@ function renderTransformer(substation, transformer) {
       <span class="wire-port output" data-port-type="transformer-output" data-port-id="${transformer.id}" title="Drag to a feeder"></span>
       <div class="transformer-line ${state}"></div>
       <span class="bay-breaker ${transformer.breaker === "CLOSED" ? "closed" : "open"}" aria-label="Breaker ${transformer.breaker}"></span>
+      <div class="transformer-readout" role="group" aria-label="${substation.name} ${transformer.name} ${transformer.quality === "STALE" ? "last known" : "simulated"} measurements">
+        <strong>${substation.code} ${transformer.name}</strong>
+        <dl>
+          <div><dt>HV</dt><dd>${transformer.hv.toFixed(1)} kV</dd></div>
+          <div><dt>LV</dt><dd>${transformer.lv.toFixed(2)} kV</dd></div>
+          <div><dt>P</dt><dd>${transformer.load.toFixed(1)} MW</dd></div>
+          <div><dt>I</dt><dd>${Math.round(transformer.current)} A</dd></div>
+          <div><dt>PF</dt><dd>${transformer.pf.toFixed(2)}</dd></div>
+          <div><dt>TEMP</dt><dd>${transformer.temp}&deg;C</dd></div>
+        </dl>
+        ${transformer.quality === "STALE" ? '<span class="readout-quality">LAST KNOWN</span>' : ""}
+      </div>
       <div class="transformer-visual ${state}" aria-hidden="true">
         <span class="coil left"></span>
         <span class="coil right"></span>
@@ -679,6 +691,14 @@ function fitBusEndpoints(panel) {
 
 }
 
+function routeTransformerDrop(from, busY, firstBusX, lastBusX) {
+  const busStart = Math.min(firstBusX, lastBusX);
+  const busEnd = Math.max(firstBusX, lastBusX);
+  const joinX = Math.min(Math.max(from.x, busStart), busEnd);
+  const vertical = `M ${from.x} ${from.y} V ${busY}`;
+  return Math.abs(joinX - from.x) < 1 ? vertical : `${vertical} H ${joinX}`;
+}
+
 function drawWires(scenario) {
   const panel = document.querySelector(".diagram-panel");
   fitBusEndpoints(panel);
@@ -696,10 +716,13 @@ function drawWires(scenario) {
     const outputPort = document.querySelector(`[data-port-type="transformer-output"][data-port-id="${transformer.id}"]`);
     const bus = document.querySelector(`[data-bus-for="${transformer.id}"]`);
     if (!outputPort || !bus) return;
+    const segments = bus.querySelectorAll(".bus-segment");
+    if (!segments.length) return;
     const from = pointInDiagram(outputPort, panel);
     const to = pointInDiagram(bus, panel);
-    const bendY = from.y + Math.max(12, (to.y - from.y) / 2);
-    const route = `M ${from.x} ${from.y} V ${bendY} H ${to.x} V ${to.y}`;
+    const firstBusX = pointInDiagram(segments[0], panel).x;
+    const lastBusX = pointInDiagram(segments[segments.length - 1], panel).x;
+    const route = routeTransformerDrop(from, to.y, firstBusX, lastBusX);
     const state = statusClass(transformer);
     paths.push(`<path class="wire-path trunk ${state}" d="${route}"/>`);
     if (state === "energized") {
