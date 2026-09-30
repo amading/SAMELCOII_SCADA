@@ -51,7 +51,7 @@ button:focus-visible, [tabindex="0"]:focus-visible { outline: 2px solid #fff; ou
 .status-strip { justify-content: end; gap: 26px; text-align: right; }
 .status-strip > div:first-child span, .status-strip > div:first-child strong { display: block; white-space: nowrap; }
 .status-strip > div:first-child span { color: #9db9cf; font-size: .75rem; }
-.status-strip > div:first-child strong { margin-top: 3px; font-size: 1.2rem; }
+.status-strip > div:first-child strong { margin-top: 3px; font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; }
 .system-online { gap: 14px; padding: 9px 0 9px 22px; border-left: 1px solid #315066; text-align: left; }
 .system-online strong, .system-online span { display: block; white-space: nowrap; }
 .system-online strong { color: var(--green); font-size: .88rem; }
@@ -369,6 +369,7 @@ button:focus-visible, [tabindex="0"]:focus-visible { outline: 2px solid #fff; ou
   :root { font-size: 19px; }
   .dashboard-shell { padding: 20px; }
   .topbar { min-height: 108px; padding: 18px 28px; }
+  .status-strip > div:first-child strong { font-size: 2.2rem; }
   .main-grid { grid-template-columns: 280px minmax(0, 1fr); gap: 14px; }
   .source-panel { min-height: 700px; padding: 22px; }
   .source-log-face { height: 610px; }
