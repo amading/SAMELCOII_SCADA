@@ -235,3 +235,17 @@ test("transformer readouts show measurements and flag stale values", () => {
   assert.match(css, /\.section-bus \.bus-caption\s*\{[^}]*background:\s*transparent;[^}]*text-shadow:/);
   assert.match(css, /\.transformer-copy\s*\{[^}]*text-shadow:\s*var\(--wire-label-shadow\)/);
 });
+
+test("legend stays borderless at the bottom of the feeder diagram", () => {
+  const html = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+  const css = fs.readFileSync(path.join(__dirname, "styles.css"), "utf8");
+  const feederAt = html.indexOf('id="feederGrid"');
+  const legendAt = html.indexOf('class="diagram-legend"');
+  const wiringAt = html.indexOf('id="wiringLayer"');
+  const bottomAt = html.indexOf('id="bottomGrid"');
+  assert.ok(feederAt < legendAt && legendAt < wiringAt && wiringAt < bottomAt);
+  assert.equal((html.match(/<h2>Legend<\/h2>/g) || []).length, 1);
+  assert.doesNotMatch(html, /class="legend-panel"/);
+  assert.match(css, /\.diagram-legend\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;/);
+  assert.match(css, /\.legend-items\s*\{[^}]*flex-wrap:\s*wrap;/);
+});

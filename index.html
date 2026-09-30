@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>SCADA Grid Control</title>
-    <link rel="stylesheet" href="./styles.css?v=20261001-side-log" />
+    <link rel="stylesheet" href="./styles.css?v=20261001-feeder-legend" />
   </head>
   <body>
     <main class="dashboard-shell">
@@ -93,6 +93,20 @@
           <div class="bus-label">13.8 kV BUS SECTIONS <span>Local wiring draft | feeder ties</span></div>
 
           <section class="feeder-grid" id="feederGrid" aria-label="Feeders"></section>
+          <section class="diagram-legend" aria-label="Legend">
+            <h2>Legend</h2>
+            <div class="legend-items">
+              <div class="legend-row"><span class="feeder-swatch energized"></span>Feeder powered</div>
+              <div class="legend-row"><span class="feeder-swatch off"></span>Feeder no power / trip</div>
+              <div class="legend-row"><span class="line energized"></span>Energized line</div>
+              <div class="legend-row"><span class="line off"></span>De-energized line</div>
+              <div class="legend-row"><span class="breaker closed"></span>Breaker closed</div>
+              <div class="legend-row"><span class="breaker open"></span>Breaker open / off</div>
+              <div class="legend-row"><span class="breaker trip"></span>Breaker tripped</div>
+              <div class="legend-row"><span class="tie-symbol"></span>Feeder tie closed (draft)</div>
+              <div class="legend-row"><span class="quality stale"></span>Stale data / comm lost</div>
+            </div>
+          </section>
           <svg class="wiring-layer" id="wiringLayer" aria-hidden="true"></svg>
         </section>
       </section>
@@ -129,18 +143,6 @@
           </table>
         </article>
 
-        <article class="legend-panel">
-          <h2>Legend</h2>
-          <div class="legend-row"><span class="feeder-swatch energized"></span>Feeder powered</div>
-          <div class="legend-row"><span class="feeder-swatch off"></span>Feeder no power / trip</div>
-          <div class="legend-row"><span class="line energized"></span>Energized line</div>
-          <div class="legend-row"><span class="line off"></span>De-energized line</div>
-          <div class="legend-row"><span class="breaker closed"></span>Breaker closed</div>
-          <div class="legend-row"><span class="breaker open"></span>Breaker open / off</div>
-          <div class="legend-row"><span class="breaker trip"></span>Breaker tripped</div>
-          <div class="legend-row"><span class="tie-symbol"></span>Feeder tie closed (draft)</div>
-          <div class="legend-row"><span class="quality stale"></span>Stale data / comm lost</div>
-        </article>
       </section>
     </main>
 
