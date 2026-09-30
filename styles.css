@@ -246,8 +246,7 @@ button:focus-visible, [tabindex="0"]:focus-visible { outline: 2px solid #fff; ou
 .bus-label span { color: var(--amber); font-size: .64rem; font-weight: 600; text-transform: uppercase; }
 .feeder-grid { display: flex; align-items: flex-start; gap: 20px; margin-top: 20px; padding: 0 0 58px; }
 .diagram-legend { position: relative; z-index: 2; padding: 0 4px 2px; border: 0; background: transparent; box-shadow: none; }
-.diagram-legend h2 { margin: 0 0 10px; color: var(--cyan); font-size: .7rem; font-weight: 800; text-transform: uppercase; }
-.legend-items { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
+.legend-items { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 22px; }
 .diagram-legend .legend-row { margin: 0; white-space: nowrap; }
 .feeder-group { position: relative; flex: var(--feeder-count) 1 0; min-width: 96px; }
 .section-bus { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(var(--feeder-count), minmax(0, 1fr)); gap: 5px; height: 4px; }

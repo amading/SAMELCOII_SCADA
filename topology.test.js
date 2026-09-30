@@ -244,8 +244,10 @@ test("legend stays borderless at the bottom of the feeder diagram", () => {
   const wiringAt = html.indexOf('id="wiringLayer"');
   const bottomAt = html.indexOf('id="bottomGrid"');
   assert.ok(feederAt < legendAt && legendAt < wiringAt && wiringAt < bottomAt);
-  assert.equal((html.match(/<h2>Legend<\/h2>/g) || []).length, 1);
+  assert.doesNotMatch(html, /<h2>Legend<\/h2>/);
+  assert.match(html, /class="diagram-legend" aria-label="Legend"/);
   assert.doesNotMatch(html, /class="legend-panel"/);
   assert.match(css, /\.diagram-legend\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;/);
   assert.match(css, /\.legend-items\s*\{[^}]*flex-wrap:\s*wrap;/);
+  assert.match(css, /\.legend-items\s*\{[^}]*justify-content:\s*center;/);
 });
