@@ -4,13 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>SCADA Grid Control</title>
-    <link rel="stylesheet" href="./styles.css?v=20261001-icon-controls" />
+    <link rel="stylesheet" href="./src/css/styles.css?v=20261001-settings" />
   </head>
   <body>
     <main class="dashboard-shell">
       <header class="topbar">
         <section class="brand-block" aria-label="Utility identity">
-          <img class="utility-logo" src="./assets/samelco-lightning.png" alt="SAMELCO II lightning logo" />
+          <img class="utility-logo" src="./assets/images/samelco-lightning.png" alt="SAMELCO II lightning logo" />
           <div>
             <h1>SAMELCO II</h1>
             <p>Real-Time Distribution Monitoring</p>
@@ -36,10 +36,10 @@
       </header>
 
       <section class="control-bar" aria-label="Demo state controls">
-        <button class="demo-button icon-button wiring-toggle" id="wiringToggle" type="button" aria-pressed="false" aria-label="Enable simulation edit" title="Enable simulation edit"><span class="control-icon edit-icon" aria-hidden="true"></span></button>
+        <button class="demo-button icon-button wiring-toggle" id="wiringToggle" type="button" aria-pressed="false" aria-label="Enable simulation edit" title="Enable simulation edit"><img class="control-icon" src="./assets/icons/lucide-pencil-ruler.svg" alt="" aria-hidden="true" /></button>
         <span class="wiring-hint" id="wiringHint" hidden>Draft simulation only. Drag NGCP to transformer or transformer to feeder; select a feeder tie for transfer preview. No field commands are sent.</span>
         <div class="scenario-control">
-          <span class="control-icon scenario-icon" aria-hidden="true"></span>
+          <img class="control-icon" src="./assets/icons/lucide-list-filter.svg" alt="" aria-hidden="true" />
           <label class="sr-only" for="demoScenario">Demo scenario</label>
           <select id="demoScenario" title="Demo scenario">
             <option value="normal">Normal</option>
@@ -49,7 +49,25 @@
             <option value="commLost">Comm Lost / Stale Data</option>
           </select>
         </div>
-        <button class="demo-button icon-button panels-toggle" id="bottomToggle" type="button" aria-expanded="true" aria-controls="bottomGrid" aria-label="Hide lower panels" title="Hide lower panels"><span class="control-icon panel-icon" aria-hidden="true"></span></button>
+        <button class="demo-button icon-button panels-toggle" id="bottomToggle" type="button" aria-expanded="true" aria-controls="bottomGrid" aria-label="Hide lower panels" title="Hide lower panels"><img class="control-icon panel-close-icon" src="./assets/icons/lucide-panel-bottom-close.svg" alt="" aria-hidden="true" /><img class="control-icon panel-open-icon" src="./assets/icons/lucide-panel-bottom-open.svg" alt="" aria-hidden="true" /></button>
+        <div class="settings-wrap">
+          <button class="demo-button icon-button settings-toggle" id="settingsToggle" type="button" aria-expanded="false" aria-controls="settingsPanel" aria-label="Display settings" title="Display settings"><img class="control-icon" src="./assets/icons/lucide-settings-2.svg" alt="" aria-hidden="true" /></button>
+          <section class="settings-panel" id="settingsPanel" aria-label="Display settings" hidden>
+            <div class="settings-heading"><strong>Display Settings</strong><span>LOCAL</span></div>
+            <fieldset class="settings-fieldset">
+              <legend>Surface</legend>
+              <div class="surface-options">
+                <label><input type="radio" name="surface" value="clean" data-setting="surface" /><span>Clean</span></label>
+                <label><input type="radio" name="surface" value="panel" data-setting="surface" /><span>Panel</span></label>
+              </div>
+            </fieldset>
+            <label class="settings-row" for="settingGrid"><span>Background grid</span><input id="settingGrid" type="checkbox" data-setting="grid" /></label>
+            <label class="settings-row" for="settingGlow"><span>Power glow</span><input id="settingGlow" type="checkbox" data-setting="glow" /></label>
+            <label class="settings-row" for="settingMotion"><span>Motion</span><input id="settingMotion" type="checkbox" data-setting="motion" /></label>
+            <label class="settings-row" for="settingTextSize"><span>Text size</span><select id="settingTextSize" data-setting="textSize"><option value="normal">Normal</option><option value="large">Large</option></select></label>
+            <button class="settings-reset" id="resetDisplay" type="button">Reset Display</button>
+          </section>
+        </div>
       </section>
 
       <section class="main-grid">
@@ -63,7 +81,7 @@
             <button class="panel-toggle" id="sourceToggle" type="button" aria-expanded="true" aria-controls="sourceContent sourceLogFace" title="Minimize NGCP panel" aria-label="Minimize NGCP panel">−</button>
           </div>
           <div id="sourceContent" class="source-content source-face">
-            <img class="source-logo" src="./assets/ngcp-seal.png" alt="National Grid Corporation of the Philippines seal" />
+            <img class="source-logo" src="./assets/images/ngcp-seal.png" alt="National Grid Corporation of the Philippines seal" />
             <dl class="meter-stack">
               <div><dt>V</dt><dd id="ngcpVoltage">69.1 kV</dd></div>
               <div><dt>P</dt><dd id="ngcpPower">18.7 MW</dd></div>
@@ -151,7 +169,7 @@
       <div id="detailContent"></div>
     </aside>
 
-    <script src="./topology.js"></script>
-    <script src="./app.js?v=20261001-icon-controls"></script>
+    <script src="./src/js/topology.js"></script>
+    <script src="./src/js/app.js?v=20261001-settings"></script>
   </body>
 </html>

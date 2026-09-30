@@ -159,6 +159,19 @@ const wiringKey = "samelco-scada-draft-wiring-v1";
 const auditKey = "samelco-scada-draft-audit-v1";
 const uiKey = "samelco-scada-ui-v1";
 const demoEvents = ["normal", "t1Energized", "t2Off", "feederTrip", "commLost"];
+const nominalFeeders = structuredClone(baseFeeders);
+const displayDefaults = Object.freeze({ surface: "clean", grid: false, glow: true, motion: true, textSize: "normal" });
+
+function normalizeDisplay(value) {
+  const saved = value && typeof value === "object" ? value : {};
+  return {
+    surface: ["clean", "panel"].includes(saved.surface) ? saved.surface : displayDefaults.surface,
+    grid: typeof saved.grid === "boolean" ? saved.grid : displayDefaults.grid,
+    glow: typeof saved.glow === "boolean" ? saved.glow : displayDefaults.glow,
+    motion: typeof saved.motion === "boolean" ? saved.motion : displayDefaults.motion,
+    textSize: ["normal", "large"].includes(saved.textSize) ? saved.textSize : displayDefaults.textSize,
+  };
+}
 
 function loadUIState() {
   let saved = {};
@@ -169,6 +182,7 @@ function loadUIState() {
     sourceFace: saved.sourceFace === "logs" ? "logs" : "meters",
     activeEvent: demoEvents.includes(saved.activeEvent) ? saved.activeEvent : "normal",
     eventFilter: ["ALL", "ALARM", "WARNING", "EVENT"].includes(saved.eventFilter) ? saved.eventFilter : "ALL",
+    display: normalizeDisplay(saved.display),
   };
 }
 
@@ -180,6 +194,36 @@ function saveUIState() {
       eventFilter: appState.eventFilter,
     }));
   } catch (_) { /* Keep preferences for this session. */ }
+}
+
+function applyDisplaySettings() {
+  const display = appState.ui.display;
+  document.body.dataset.surface = display.surface;
+  document.body.dataset.grid = display.grid ? "on" : "off";
+  document.body.dataset.glow = display.glow ? "on" : "off";
+  document.body.dataset.motion = display.motion ? "on" : "off";
+  document.body.dataset.textSize = display.textSize;
+  document.querySelectorAll("#settingsPanel [data-setting]").forEach((control) => {
+    const value = display[control.dataset.setting];
+    if (control.type === "checkbox") control.checked = value;
+    else if (control.type === "radio") control.checked = control.value === value;
+    else control.value = value;
+  });
+}
+
+function setDisplaySetting(key, value) {
+  if (!(key in displayDefaults)) return;
+  appState.ui.display = normalizeDisplay({ ...appState.ui.display, [key]: value });
+  applyDisplaySettings();
+  saveUIState();
+  requestAnimationFrame(() => drawWires(getScenario()));
+}
+
+function resetDisplaySettings() {
+  appState.ui.display = { ...displayDefaults };
+  applyDisplaySettings();
+  saveUIState();
+  requestAnimationFrame(() => drawWires(getScenario()));
 }
 
 function defaultWiring() {
@@ -221,7 +265,7 @@ function saveWiring() {
 
 appState.wiring = loadWiring();
 const savedUI = loadUIState();
-appState.ui = { sourceCollapsed: savedUI.sourceCollapsed, bottomCollapsed: savedUI.bottomCollapsed, sourceFace: savedUI.sourceFace };
+appState.ui = { sourceCollapsed: savedUI.sourceCollapsed, bottomCollapsed: savedUI.bottomCollapsed, sourceFace: savedUI.sourceFace, display: savedUI.display };
 appState.activeEvent = savedUI.activeEvent;
 appState.eventFilter = savedUI.eventFilter;
 appState.commLostAt = savedUI.activeEvent === "commLost" ? Date.now() - 138000 : null;
@@ -267,6 +311,18 @@ function sampleLiveLog(scenario) {
   if (tick % 4 === 1) pushLiveLog("SAMPLE", `System load ${totalLoad.toFixed(1)} MW`, `${Math.round(totalCurrent).toLocaleString()} A total feeder current`);
   if (tick % 4 === 2) pushLiveLog("SAMPLE", `Catbalogan T1 ${transformers[0].load.toFixed(1)} MW`, `${transformers[0].energized ? "Energized" : "Off"} | fan ${transformers[0].fan.toLowerCase()}`);
   if (tick % 4 === 3) pushLiveLog("SAMPLE", `${scenario.feeders.filter((feeder) => feeder.energized).length} of ${scenario.feeders.length} feeders powered`, "Computed from the local demo topology");
+}
+
+// Oscillate around the nominal snapshot so repeated samples never drift away from it.
+function fluctuateFeeders(now) {
+  baseFeeders.forEach((feeder, index) => {
+    const nominal = nominalFeeders[index];
+    const wave = Math.sin(now / 2500 + index) * 0.02;
+    feeder.voltage = nominal.voltage + wave;
+    feeder.mw = Math.max(0, nominal.mw + wave * 0.2);
+    feeder.current = feeder.mw * 1000 / (Math.sqrt(3) * feeder.voltage * feeder.pf);
+    feeder.mvar = feeder.mw * Math.tan(Math.acos(feeder.pf));
+  });
 }
 
 function cloneEquipment() {
@@ -486,7 +542,7 @@ function render() {
   renderEvents(scenario);
   renderLiveLogs();
   updateClock();
-  wireEquipmentClicks(scenario);
+  wireEquipmentClicks();
   if (appState.selectedEquipment) showDetail(appState.selectedEquipment, scenario);
   requestAnimationFrame(() => drawWires(scenario));
 }
@@ -706,21 +762,21 @@ function updateClock() {
   });
 }
 
-function wireEquipmentClicks(scenario) {
+function wireEquipmentClicks() {
   document.querySelectorAll("[data-equipment]").forEach((element) => {
     if (element.dataset.bound === "true") return;
     element.dataset.bound = "true";
     element.addEventListener("click", (event) => {
       if (event.target.closest(".wire-port, .panel-toggle, .source-flip, .source-panel.logs-active")) return;
       event.stopPropagation();
-      showDetail(element.dataset.equipment, scenario);
+      showDetail(element.dataset.equipment, getScenario());
     });
     element.addEventListener("keydown", (event) => {
       if (event.target.closest(".tie-switch, .panel-toggle, .source-flip, .source-panel.logs-active")) return;
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         event.stopPropagation();
-        showDetail(element.dataset.equipment, scenario);
+        showDetail(element.dataset.equipment, getScenario());
       }
     });
   });
@@ -1098,6 +1154,36 @@ document.getElementById("demoScenario").addEventListener("change", (event) => {
   if (selectDemoScenario(event.target.value)) render();
 });
 
+function setSettingsOpen(open) {
+  document.getElementById("settingsPanel").hidden = !open;
+  document.getElementById("settingsToggle").setAttribute("aria-expanded", String(open));
+}
+
+document.getElementById("settingsToggle").addEventListener("click", () => {
+  setSettingsOpen(document.getElementById("settingsPanel").hidden);
+});
+
+document.getElementById("settingsPanel").addEventListener("change", (event) => {
+  const control = event.target;
+  if (!control.dataset.setting || (control.type === "radio" && !control.checked)) return;
+  setDisplaySetting(control.dataset.setting, control.type === "checkbox" ? control.checked : control.value);
+});
+
+document.getElementById("resetDisplay").addEventListener("click", () => {
+  resetDisplaySettings();
+});
+
+document.addEventListener("pointerdown", (event) => {
+  if (!event.target.closest(".settings-wrap")) setSettingsOpen(false);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !document.getElementById("settingsPanel").hidden) {
+    setSettingsOpen(false);
+    document.getElementById("settingsToggle").focus();
+  }
+});
+
 document.querySelectorAll(".event-tabs button").forEach((button) => {
   button.addEventListener("click", () => {
     document.querySelectorAll(".event-tabs button").forEach((item) => item.classList.remove("active"));
@@ -1115,15 +1201,7 @@ setInterval(() => {
     updateClock();
     return;
   }
-  if (appState.activeEvent === "normal") {
-    baseFeeders.forEach((feeder, index) => {
-      const wave = Math.sin(Date.now() / 2500 + index) * 0.02;
-      feeder.voltage = Math.max(0, feeder.voltage + wave);
-      feeder.mw = Math.max(0, feeder.mw + wave * 0.2);
-      feeder.current = feeder.mw * 1000 / (Math.sqrt(3) * feeder.voltage * feeder.pf);
-      feeder.mvar = feeder.mw * Math.tan(Math.acos(feeder.pf));
-    });
-  }
+  if (appState.activeEvent === "normal") fluctuateFeeders(Date.now());
   sampleLiveLog(getScenario());
   render();
 }, 5000);
@@ -1131,4 +1209,5 @@ setInterval(() => {
 window.addEventListener("resize", () => drawWires(getScenario()));
 
 sampleLiveLog(getScenario());
+applyDisplaySettings();
 render();

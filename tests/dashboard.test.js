@@ -4,6 +4,9 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 const path = require("node:path");
 
+const root = path.join(__dirname, "..");
+const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
+
 function dashboard(initialStorage = {}) {
   const storage = new Map(Object.entries(initialStorage));
   const context = vm.createContext({
@@ -12,8 +15,8 @@ function dashboard(initialStorage = {}) {
     Date,
     Math,
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname, "topology.js"), "utf8"), context);
-  const app = fs.readFileSync(path.join(__dirname, "app.js"), "utf8");
+  vm.runInContext(read("src/js/topology.js"), context);
+  const app = read("src/js/app.js");
   vm.runInContext(app.split('document.addEventListener("pointerdown"')[0], context);
   vm.runInContext(app.slice(app.indexOf("function showDetail("), app.indexOf('document.getElementById("closePanel")')), context);
   const run = (expression) => vm.runInContext(expression, context);
@@ -99,7 +102,7 @@ test("each feeder bus is segmented to its actual feeder columns", () => {
   const markup = run("grid.innerHTML");
   assert.equal((markup.match(/class="section-bus /g) || []).length, 5);
   assert.equal((markup.match(/class="bus-segment"/g) || []).length, 15);
-  const css = fs.readFileSync(path.join(__dirname, "styles.css"), "utf8");
+  const css = read("src/css/styles.css");
   assert.match(css, /\.bus-segment:first-of-type::before\s*\{\s*left: 50%/);
   assert.match(css, /\.bus-segment:last-of-type::before\s*\{\s*right: 50%/);
   assert.doesNotMatch(css, /\.section-bus\.energized\s*\{\s*background:/);
@@ -132,11 +135,11 @@ test("simulated sidebar logs stay newest first and mark stale data", () => {
   assert.match(run("appState.liveLog[0].detail"), /current field state unconfirmed/);
   run('for (let index = 0; index < 40; index++) pushLiveLog("SAMPLE", String(index), "demo")');
   assert.equal(run("appState.liveLog.length"), 30);
-  const html = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+  const html = read("index.html");
   assert.match(html, /id="sourceFlip"/);
   assert.match(html, /id="sourceLogFace"[^>]*hidden/);
   assert.match(html, /SIMULATED LIVE/);
-  const css = fs.readFileSync(path.join(__dirname, "styles.css"), "utf8");
+  const css = read("src/css/styles.css");
   assert.doesNotMatch(css, /\.source-panel\s*\{[^}]*border-left:/);
   assert.match(css, /\.source-panel\.source-flipping \.source-face:not\(\[hidden\]\), \.side-log-list li\.fresh, \.live-dot \{ animation: none; \}/);
 });
@@ -187,14 +190,14 @@ test("scenario dropdown saves only valid demo selections", () => {
   assert.equal(run('selectDemoScenario("not-a-scenario")'), false);
   assert.equal(run("appState.activeEvent"), "feederTrip");
   assert.equal(JSON.parse(run.storage.get("samelco-scada-ui-v1")).activeEvent, "feederTrip");
-  const html = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+  const html = read("index.html");
   assert.match(html, /<select id="demoScenario"/);
-  assert.equal((html.match(/<option value=/g) || []).length, 5);
+  assert.equal((html.match(/<select id="demoScenario"[^]*?<\/select>/)[0].match(/<option value=/g) || []).length, 5);
   assert.doesNotMatch(html, /data-event=/);
 });
 
 test("transformer MVA cards stay portrait while Catbalogan bays remain side by side", () => {
-  const css = fs.readFileSync(path.join(__dirname, "styles.css"), "utf8");
+  const css = read("src/css/styles.css");
   assert.match(css, /\.transformer-stack\.multi\s*\{\s*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(css, /\.transformer-card\s*\{[^}]*display:\s*flex;[^}]*flex-direction:\s*column;/);
   assert.match(css, /\.transformer-nameplate\s*\{[^}]*flex-direction:\s*column;/);
@@ -203,7 +206,7 @@ test("transformer MVA cards stay portrait while Catbalogan bays remain side by s
 });
 
 test("visual power effects follow energized state and respect reduced motion", () => {
-  const css = fs.readFileSync(path.join(__dirname, "styles.css"), "utf8");
+  const css = read("src/css/styles.css");
   assert.match(css, /\.transformer-visual\.energized\s*\{[^}]*animation:/);
   assert.match(css, /\.feeder-card\.energized::before\s*\{[^}]*animation:/);
   assert.match(css, /\.stale \.fan\.running\s*\{[^}]*animation:\s*none;/);
@@ -228,7 +231,7 @@ test("transformer readouts show measurements and flag stale values", () => {
   run('appState.activeEvent = "commLost"');
   const stale = run("renderTransformer(getScenario().substations[2], getScenario().substations[2].transformers[0])");
   assert.match(stale, /LAST KNOWN/);
-  const css = fs.readFileSync(path.join(__dirname, "styles.css"), "utf8");
+  const css = read("src/css/styles.css");
   assert.match(css, /\.transformer-visual > \.wire-port\.output\s*\{\s*bottom:\s*-7px/);
   assert.match(css, /\.transformer-readout\s*\{[^}]*right:\s*calc\(50% \+ 44px\)/);
   assert.match(css, /\.substation-row\s*\{[^}]*padding-left:\s*48px/);
@@ -237,8 +240,8 @@ test("transformer readouts show measurements and flag stale values", () => {
 });
 
 test("legend stays borderless at the bottom of the feeder diagram", () => {
-  const html = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
-  const css = fs.readFileSync(path.join(__dirname, "styles.css"), "utf8");
+  const html = read("index.html");
+  const css = read("src/css/styles.css");
   const feederAt = html.indexOf('id="feederGrid"');
   const legendAt = html.indexOf('class="diagram-legend"');
   const wiringAt = html.indexOf('id="wiringLayer"');
@@ -253,16 +256,65 @@ test("legend stays borderless at the bottom of the feeder diagram", () => {
 });
 
 test("control bar uses accessible icon-only controls", () => {
-  const html = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
-  const css = fs.readFileSync(path.join(__dirname, "styles.css"), "utf8");
-  const app = fs.readFileSync(path.join(__dirname, "app.js"), "utf8");
-  assert.match(html, /id="wiringToggle"[^>]*aria-label="Enable simulation edit"[^>]*><span class="control-icon edit-icon"/);
+  const html = read("index.html");
+  const css = read("src/css/styles.css");
+  const app = read("src/js/app.js");
+  assert.match(html, /id="wiringToggle"[^>]*aria-label="Enable simulation edit"[^>]*><img class="control-icon" src="\.\/assets\/icons\/lucide-pencil-ruler\.svg"/);
   assert.match(html, /<label class="sr-only" for="demoScenario">Demo scenario<\/label>/);
-  assert.match(html, /id="bottomToggle"[^>]*aria-label="Hide lower panels"[^>]*><span class="control-icon panel-icon"/);
+  assert.match(html, /id="bottomToggle"[^>]*aria-label="Hide lower panels"[^>]*><img class="control-icon panel-close-icon"/);
   assert.match(css, /\.scenario-control select\s*\{[^}]*opacity:\s*0;/);
   assert.match(app, /bottomToggle\.setAttribute\("aria-label", bottomToggle\.title\)/);
   assert.match(app, /wiringToggle\.setAttribute\("aria-label", wiringToggle\.title\)/);
   for (const icon of ["pencil-ruler", "list-filter", "panel-bottom-close", "panel-bottom-open"]) {
-    assert.ok(fs.existsSync(path.join(__dirname, "assets", `lucide-${icon}.svg`)));
+    assert.ok(fs.existsSync(path.join(root, "assets", "icons", `lucide-${icon}.svg`)));
   }
+});
+
+test("display settings save, restore, and reset without changing wiring", () => {
+  const run = dashboard();
+  assert.equal(run("appState.ui.display.surface"), "clean");
+  assert.equal(run("appState.ui.display.grid"), false);
+  run("globalThis.document = { body: { dataset: {} }, querySelectorAll: () => [] }; globalThis.requestAnimationFrame = () => {};");
+  const wiringBefore = run("JSON.stringify(appState.wiring)");
+  run('setDisplaySetting("surface", "panel"); setDisplaySetting("grid", true); setDisplaySetting("textSize", "large")');
+  const saved = run.storage.get("samelco-scada-ui-v1");
+  assert.equal(JSON.parse(saved).display.surface, "panel");
+  assert.equal(JSON.parse(saved).display.grid, true);
+  assert.equal(run("document.body.dataset.textSize"), "large");
+  assert.equal(run("JSON.stringify(appState.wiring)"), wiringBefore);
+  const restored = dashboard({ "samelco-scada-ui-v1": saved });
+  assert.equal(restored("appState.ui.display.surface"), "panel");
+  assert.equal(restored("appState.ui.display.grid"), true);
+  run("resetDisplaySettings()");
+  assert.equal(run("appState.ui.display.surface"), "clean");
+  assert.equal(run("appState.ui.display.grid"), false);
+  assert.equal(run("JSON.stringify(appState.wiring)"), wiringBefore);
+  assert.equal(JSON.parse(run.storage.get("samelco-scada-ui-v1")).display.surface, "clean");
+  const invalid = dashboard({ "samelco-scada-ui-v1": JSON.stringify({ display: { surface: "unknown", grid: "yes", textSize: "huge" } }) });
+  assert.equal(invalid("appState.ui.display.surface"), "clean");
+  assert.equal(invalid("appState.ui.display.grid"), false);
+  assert.equal(invalid("appState.ui.display.textSize"), "normal");
+});
+
+test("display settings keep status colors and wiring markup intact", () => {
+  const html = read("index.html");
+  const css = read("src/css/styles.css");
+  assert.match(html, /id="settingsToggle"[^>]*aria-controls="settingsPanel"/);
+  assert.match(html, /id="settingsPanel"[^>]*hidden/);
+  assert.match(css, /body\[data-surface="clean"\] \.feeder-card\.stale/);
+  assert.match(css, /body\[data-grid="off"\] \.diagram-panel/);
+  assert.match(css, /body\[data-motion="off"\] \.wire-pulse\s*\{\s*display:\s*none/);
+  assert.ok(fs.existsSync(path.join(root, "assets", "icons", "lucide-settings-2.svg")));
+  const run = dashboard();
+  run('appState.activeEvent = "commLost"');
+  assert.equal(run('statusClass(getScenario().substations[2].transformers[0])'), "stale");
+});
+
+test("normal-mode fluctuation stays bounded around nominal feeder values", () => {
+  const run = dashboard();
+  run("for (let step = 0; step < 500; step++) fluctuateFeeders(step * 5000)");
+  const maxVoltageOffset = run("Math.max(...baseFeeders.map((f, i) => Math.abs(f.voltage - nominalFeeders[i].voltage)))");
+  const maxPowerOffset = run("Math.max(...baseFeeders.map((f, i) => Math.abs(f.mw - nominalFeeders[i].mw)))");
+  assert.ok(maxVoltageOffset <= 0.02 + 1e-9);
+  assert.ok(maxPowerOffset <= 0.004 + 1e-9);
 });
