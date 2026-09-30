@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>SCADA Grid Control</title>
-    <link rel="stylesheet" href="./styles.css?v=20261001-label-shadow" />
+    <link rel="stylesheet" href="./styles.css?v=20261001-side-log" />
   </head>
   <body>
     <main class="dashboard-shell">
@@ -55,12 +55,13 @@
         <aside class="source-panel equipment-card" data-equipment="NGCP" tabindex="0">
           <div class="card-title">
             <div>
-              <h2>NGCP</h2>
-              <p>Grid Source</p>
+              <h2 id="sourceTitle">NGCP</h2>
+              <p id="sourceSubtitle">Grid Source</p>
             </div>
-            <button class="panel-toggle" id="sourceToggle" type="button" aria-expanded="true" aria-controls="sourceContent" title="Minimize NGCP panel" aria-label="Minimize NGCP panel">−</button>
+            <button class="source-flip" id="sourceFlip" type="button" aria-pressed="false" aria-controls="sourceContent sourceLogFace" title="Show simulated live logs" aria-label="Show simulated live logs">⇄</button>
+            <button class="panel-toggle" id="sourceToggle" type="button" aria-expanded="true" aria-controls="sourceContent sourceLogFace" title="Minimize NGCP panel" aria-label="Minimize NGCP panel">−</button>
           </div>
-          <div id="sourceContent" class="source-content">
+          <div id="sourceContent" class="source-content source-face">
             <img class="source-logo" src="./assets/ngcp-seal.png" alt="National Grid Corporation of the Philippines seal" />
             <dl class="meter-stack">
               <div><dt>V</dt><dd id="ngcpVoltage">69.1 kV</dd></div>
@@ -68,6 +69,10 @@
               <div><dt>Q</dt><dd id="ngcpMvar">4.2 MVAR</dd></div>
               <div><dt>F</dt><dd id="ngcpFreq">59.99 Hz</dd></div>
             </dl>
+          </div>
+          <div id="sourceLogFace" class="source-log-face source-face" hidden>
+            <div class="side-log-heading"><span class="live-dot" aria-hidden="true"></span><strong>SIMULATED LIVE</strong><span id="sideLogCount">00</span></div>
+            <ol id="sideLogList" class="side-log-list" aria-label="Latest simulated events first"></ol>
           </div>
           <span class="source-rail-label" aria-hidden="true">NGCP</span>
         </aside>
@@ -145,6 +150,6 @@
     </aside>
 
     <script src="./topology.js"></script>
-    <script src="./app.js?v=20261001-connected-drops"></script>
+    <script src="./app.js?v=20261001-side-log"></script>
   </body>
 </html>

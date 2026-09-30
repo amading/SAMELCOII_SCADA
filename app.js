@@ -7,7 +7,11 @@ const appState = {
   wiring: null,
   commLostAt: null,
   audit: [],
-  ui: { sourceCollapsed: false, bottomCollapsed: false },
+  liveLog: [],
+  nextLogId: 0,
+  lastRenderedLogId: 0,
+  logTick: 0,
+  ui: { sourceCollapsed: false, bottomCollapsed: false, sourceFace: "meters" },
 };
 
 const substations = [
@@ -162,6 +166,7 @@ function loadUIState() {
   return {
     sourceCollapsed: saved.sourceCollapsed === true,
     bottomCollapsed: saved.bottomCollapsed === true,
+    sourceFace: saved.sourceFace === "logs" ? "logs" : "meters",
     activeEvent: demoEvents.includes(saved.activeEvent) ? saved.activeEvent : "normal",
     eventFilter: ["ALL", "ALARM", "WARNING", "EVENT"].includes(saved.eventFilter) ? saved.eventFilter : "ALL",
   };
@@ -216,7 +221,7 @@ function saveWiring() {
 
 appState.wiring = loadWiring();
 const savedUI = loadUIState();
-appState.ui = { sourceCollapsed: savedUI.sourceCollapsed, bottomCollapsed: savedUI.bottomCollapsed };
+appState.ui = { sourceCollapsed: savedUI.sourceCollapsed, bottomCollapsed: savedUI.bottomCollapsed, sourceFace: savedUI.sourceFace };
 appState.activeEvent = savedUI.activeEvent;
 appState.eventFilter = savedUI.eventFilter;
 appState.commLostAt = savedUI.activeEvent === "commLost" ? Date.now() - 138000 : null;
@@ -224,11 +229,44 @@ try {
   const savedAudit = JSON.parse(localStorage.getItem(auditKey));
   if (Array.isArray(savedAudit)) appState.audit = savedAudit.filter((entry) => typeof entry?.text === "string" && typeof entry?.time === "string").slice(0, 30);
 } catch (_) { /* Audit remains in memory when storage is unavailable. */ }
+pushLiveLog("SYSTEM", "Demo monitoring started", "Local simulation; no field telemetry");
 
 function recordAudit(text) {
   appState.audit.unshift({ time: new Date().toLocaleTimeString("en-SG", { hour12: false }), text });
   appState.audit.length = Math.min(appState.audit.length, 30);
   try { localStorage.setItem(auditKey, JSON.stringify(appState.audit)); } catch (_) { /* Keep the in-memory log. */ }
+  pushLiveLog("ACTION", text, "Simulation edit only");
+}
+
+function pushLiveLog(type, text, detail) {
+  appState.liveLog.unshift({
+    id: ++appState.nextLogId,
+    time: new Date().toLocaleTimeString("en-SG", { hour12: false }),
+    type,
+    text,
+    detail,
+  });
+  appState.liveLog.length = Math.min(appState.liveLog.length, 30);
+}
+
+function sampleLiveLog(scenario) {
+  const tick = appState.logTick++;
+  if (appState.activeEvent === "commLost") {
+    const villareal = scenario.substations.find((station) => station.id === "villareal").transformers[0];
+    pushLiveLog("WARNING", "Villareal telemetry remains stale", `Last known ${villareal.lastSeen}; current field state unconfirmed`);
+    return;
+  }
+  if (appState.activeEvent === "feederTrip") {
+    pushLiveLog("ALARM", "Feeder 10 trip remains active", "Simulated breaker trip; downstream de-energized");
+    return;
+  }
+  const transformers = scenario.substations.flatMap((station) => station.transformers);
+  const totalLoad = transformers.reduce((sum, transformer) => sum + transformer.load, 0);
+  const totalCurrent = scenario.feeders.reduce((sum, feeder) => sum + feeder.current, 0);
+  if (tick % 4 === 0) pushLiveLog("SAMPLE", "NGCP 69.1 kV", "Frequency 59.99 Hz | simulated reading");
+  if (tick % 4 === 1) pushLiveLog("SAMPLE", `System load ${totalLoad.toFixed(1)} MW`, `${Math.round(totalCurrent).toLocaleString()} A total feeder current`);
+  if (tick % 4 === 2) pushLiveLog("SAMPLE", `Catbalogan T1 ${transformers[0].load.toFixed(1)} MW`, `${transformers[0].energized ? "Energized" : "Off"} | fan ${transformers[0].fan.toLowerCase()}`);
+  if (tick % 4 === 3) pushLiveLog("SAMPLE", `${scenario.feeders.filter((feeder) => feeder.energized).length} of ${scenario.feeders.length} feeders powered`, "Computed from the local demo topology");
 }
 
 function cloneEquipment() {
@@ -378,6 +416,37 @@ function statusClass(item) {
   return "energized";
 }
 
+function renderSourceFace() {
+  const showLogs = appState.ui.sourceFace === "logs";
+  const panel = document.querySelector(".source-panel");
+  panel.classList.toggle("logs-active", showLogs);
+  panel.tabIndex = showLogs ? -1 : 0;
+  document.getElementById("sourceContent").hidden = showLogs;
+  document.getElementById("sourceLogFace").hidden = !showLogs;
+  document.getElementById("sourceTitle").textContent = showLogs ? "LOGS" : "NGCP";
+  document.getElementById("sourceSubtitle").textContent = showLogs ? "Demo Stream" : "Grid Source";
+  panel.querySelector(".source-rail-label").textContent = showLogs ? "LOGS" : "NGCP";
+  const flip = document.getElementById("sourceFlip");
+  flip.setAttribute("aria-pressed", String(showLogs));
+  flip.setAttribute("aria-label", showLogs ? "Show NGCP readings" : "Show simulated live logs");
+  flip.title = flip.getAttribute("aria-label");
+}
+
+function renderLiveLogs() {
+  const list = document.getElementById("sideLogList");
+  const newestId = appState.liveLog[0]?.id;
+  list.innerHTML = appState.liveLog.map((entry) => `
+    <li class="${entry.type.toLowerCase()} ${entry.id === newestId && entry.id !== appState.lastRenderedLogId ? "fresh" : ""}">
+      <div class="side-log-meta"><span class="side-log-type">${escapeHtml(entry.type)}</span><time>${escapeHtml(entry.time)}</time></div>
+      <p>${escapeHtml(entry.text)}</p>
+      <small>${escapeHtml(entry.detail)}</small>
+    </li>
+  `).join("");
+  list.scrollTop = 0;
+  document.getElementById("sideLogCount").textContent = String(appState.liveLog.length).padStart(2, "0");
+  appState.lastRenderedLogId = newestId || 0;
+}
+
 function render() {
   const scenario = getScenario();
   document.body.classList.toggle("wiring-edit", appState.editWiring);
@@ -386,8 +455,9 @@ function render() {
   const sourceToggle = document.getElementById("sourceToggle");
   sourceToggle.textContent = appState.ui.sourceCollapsed ? "+" : "−";
   sourceToggle.setAttribute("aria-expanded", String(!appState.ui.sourceCollapsed));
-  sourceToggle.setAttribute("aria-label", appState.ui.sourceCollapsed ? "Restore NGCP panel" : "Minimize NGCP panel");
+  sourceToggle.setAttribute("aria-label", appState.ui.sourceCollapsed ? "Restore sidebar" : "Minimize sidebar");
   sourceToggle.title = sourceToggle.getAttribute("aria-label");
+  renderSourceFace();
   document.getElementById("bottomGrid").hidden = appState.ui.bottomCollapsed;
   const bottomToggle = document.getElementById("bottomToggle");
   bottomToggle.setAttribute("aria-expanded", String(!appState.ui.bottomCollapsed));
@@ -409,6 +479,7 @@ function render() {
   renderFeeders(scenario.feeders, scenario.substations);
   renderSummary(scenario);
   renderEvents(scenario);
+  renderLiveLogs();
   updateClock();
   wireEquipmentClicks(scenario);
   if (appState.selectedEquipment) showDetail(appState.selectedEquipment, scenario);
@@ -635,12 +706,12 @@ function wireEquipmentClicks(scenario) {
     if (element.dataset.bound === "true") return;
     element.dataset.bound = "true";
     element.addEventListener("click", (event) => {
-      if (event.target.closest(".wire-port, .panel-toggle")) return;
+      if (event.target.closest(".wire-port, .panel-toggle, .source-flip, .source-panel.logs-active")) return;
       event.stopPropagation();
       showDetail(element.dataset.equipment, scenario);
     });
     element.addEventListener("keydown", (event) => {
-      if (event.target.closest(".tie-switch, .panel-toggle")) return;
+      if (event.target.closest(".tie-switch, .panel-toggle, .source-flip, .source-panel.logs-active")) return;
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         event.stopPropagation();
@@ -784,6 +855,7 @@ function setWiringMode(enabled) {
     appState.activeEvent = "normal";
     appState.commLostAt = null;
   }
+  pushLiveLog("ACTION", enabled ? "Simulation Edit enabled" : "Simulation Edit disabled", "Local draft only; no field commands");
   saveUIState();
   render();
 }
@@ -794,6 +866,8 @@ function selectDemoScenario(value) {
   appState.commLostAt = value === "commLost" ? Date.now() - 138000 : null;
   appState.editWiring = false;
   appState.drag = null;
+  const labels = { normal: "Normal", t1Energized: "Catbalogan T1 energized", t2Off: "Catbalogan T2 off", feederTrip: "Feeder 10 trip", commLost: "Villareal COMM LOST" };
+  pushLiveLog(value === "feederTrip" ? "ALARM" : value === "commLost" ? "WARNING" : "ACTION", `Scenario: ${labels[value]}`, "Simulated condition selected");
   saveUIState();
   return true;
 }
@@ -998,6 +1072,17 @@ document.getElementById("sourceToggle").addEventListener("click", (event) => {
   render();
 });
 
+document.getElementById("sourceFlip").addEventListener("click", (event) => {
+  event.stopPropagation();
+  appState.ui.sourceFace = appState.ui.sourceFace === "logs" ? "meters" : "logs";
+  saveUIState();
+  const panel = document.querySelector(".source-panel");
+  panel.classList.remove("source-flipping");
+  renderSourceFace();
+  void panel.offsetWidth;
+  panel.classList.add("source-flipping");
+});
+
 document.getElementById("bottomToggle").addEventListener("click", () => {
   appState.ui.bottomCollapsed = !appState.ui.bottomCollapsed;
   saveUIState();
@@ -1019,8 +1104,9 @@ document.querySelectorAll(".event-tabs button").forEach((button) => {
 });
 
 setInterval(() => {
-  if (appState.drag) return;
-  if (document.activeElement?.closest?.(".tie-control")) {
+  if (appState.drag || document.activeElement?.closest?.(".tie-control")) {
+    sampleLiveLog(getScenario());
+    renderLiveLogs();
     updateClock();
     return;
   }
@@ -1033,9 +1119,11 @@ setInterval(() => {
       feeder.mvar = feeder.mw * Math.tan(Math.acos(feeder.pf));
     });
   }
+  sampleLiveLog(getScenario());
   render();
 }, 5000);
 
 window.addEventListener("resize", () => drawWires(getScenario()));
 
+sampleLiveLog(getScenario());
 render();

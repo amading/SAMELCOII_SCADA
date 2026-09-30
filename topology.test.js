@@ -107,14 +107,66 @@ test("each feeder bus is segmented to its actual feeder columns", () => {
 
 test("panel choices and demo preferences restore, but edit mode stays off", () => {
   const first = dashboard();
-  first('appState.ui.sourceCollapsed = true; appState.ui.bottomCollapsed = true; appState.activeEvent = "feederTrip"; appState.eventFilter = "ALARM"; saveUIState()');
+  first('appState.ui.sourceCollapsed = true; appState.ui.bottomCollapsed = true; appState.ui.sourceFace = "logs"; appState.activeEvent = "feederTrip"; appState.eventFilter = "ALARM"; saveUIState()');
   const saved = first.storage.get("samelco-scada-ui-v1");
   const restored = dashboard({ "samelco-scada-ui-v1": saved });
   assert.equal(restored("appState.ui.sourceCollapsed"), true);
   assert.equal(restored("appState.ui.bottomCollapsed"), true);
+  assert.equal(restored("appState.ui.sourceFace"), "logs");
   assert.equal(restored("appState.activeEvent"), "feederTrip");
   assert.equal(restored("appState.eventFilter"), "ALARM");
   assert.equal(restored("appState.editWiring"), false);
+});
+
+test("simulated sidebar logs stay newest first and mark stale data", () => {
+  const run = dashboard();
+  run('pushLiveLog("SAMPLE", "first", "demo"); pushLiveLog("ACTION", "second", "demo")');
+  assert.equal(run("appState.liveLog[0].text"), "second");
+  run("globalThis.logList = { innerHTML: '', scrollTop: 10 }; globalThis.logCount = { textContent: '' }; globalThis.document = { getElementById: (id) => id === 'sideLogList' ? logList : logCount }");
+  run("renderLiveLogs()");
+  const markup = run("logList.innerHTML");
+  assert.ok(markup.indexOf("second") < markup.indexOf("first"));
+  assert.equal(run("logList.scrollTop"), 0);
+  run('selectDemoScenario("commLost"); sampleLiveLog(getScenario())');
+  assert.equal(run("appState.liveLog[0].type"), "WARNING");
+  assert.match(run("appState.liveLog[0].detail"), /current field state unconfirmed/);
+  run('for (let index = 0; index < 40; index++) pushLiveLog("SAMPLE", String(index), "demo")');
+  assert.equal(run("appState.liveLog.length"), 30);
+  const html = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+  assert.match(html, /id="sourceFlip"/);
+  assert.match(html, /id="sourceLogFace"[^>]*hidden/);
+  assert.match(html, /SIMULATED LIVE/);
+  const css = fs.readFileSync(path.join(__dirname, "styles.css"), "utf8");
+  assert.doesNotMatch(css, /\.source-panel\s*\{[^}]*border-left:/);
+  assert.match(css, /\.source-panel\.source-flipping \.source-face:not\(\[hidden\]\), \.side-log-list li\.fresh, \.live-dot \{ animation: none; \}/);
+});
+
+test("sidebar flips between NGCP meters and logs", () => {
+  const run = dashboard();
+  run(`
+    globalThis.rail = { textContent: "" };
+    globalThis.panel = { tabIndex: 0, classList: { toggle(name, active) { this[name] = active; } }, querySelector: () => rail };
+    globalThis.elements = {
+      sourceContent: { hidden: false }, sourceLogFace: { hidden: true },
+      sourceTitle: { textContent: "" }, sourceSubtitle: { textContent: "" },
+      sourceFlip: { attrs: {}, setAttribute(name, value) { this.attrs[name] = value; }, getAttribute(name) { return this.attrs[name]; } },
+    };
+    globalThis.document = { querySelector: () => panel, getElementById: (id) => elements[id] };
+    appState.ui.sourceFace = "logs";
+    renderSourceFace();
+  `);
+  assert.equal(run("panel.classList['logs-active']"), true);
+  assert.equal(run("elements.sourceContent.hidden"), true);
+  assert.equal(run("elements.sourceLogFace.hidden"), false);
+  assert.equal(run("elements.sourceTitle.textContent"), "LOGS");
+  assert.equal(run("elements.sourceFlip.attrs['aria-pressed']"), "true");
+  assert.equal(run("panel.tabIndex"), -1);
+  run('appState.ui.sourceFace = "meters"; renderSourceFace()');
+  assert.equal(run("elements.sourceContent.hidden"), false);
+  assert.equal(run("elements.sourceLogFace.hidden"), true);
+  assert.equal(run("elements.sourceTitle.textContent"), "NGCP");
+  assert.equal(run("elements.sourceFlip.attrs['aria-pressed']"), "false");
+  assert.equal(run("panel.tabIndex"), 0);
 });
 
 test("draft wiring remains saved across reload", () => {
