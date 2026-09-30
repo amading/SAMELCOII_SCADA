@@ -461,13 +461,18 @@ function render() {
   document.getElementById("bottomGrid").hidden = appState.ui.bottomCollapsed;
   const bottomToggle = document.getElementById("bottomToggle");
   bottomToggle.setAttribute("aria-expanded", String(!appState.ui.bottomCollapsed));
-  bottomToggle.querySelector(".toggle-icon").textContent = appState.ui.bottomCollapsed ? "+" : "−";
   bottomToggle.title = appState.ui.bottomCollapsed ? "Show lower panels" : "Hide lower panels";
-  document.getElementById("demoScenario").value = appState.activeEvent;
+  bottomToggle.setAttribute("aria-label", bottomToggle.title);
+  const demoScenario = document.getElementById("demoScenario");
+  demoScenario.value = appState.activeEvent;
+  demoScenario.title = `Demo scenario: ${demoScenario.selectedOptions[0]?.textContent || "Normal"}`;
   document.querySelectorAll(".event-tabs button").forEach((button) =>
     button.classList.toggle("active", button.dataset.filter === appState.eventFilter)
   );
-  document.getElementById("wiringToggle").setAttribute("aria-pressed", String(appState.editWiring));
+  const wiringToggle = document.getElementById("wiringToggle");
+  wiringToggle.setAttribute("aria-pressed", String(appState.editWiring));
+  wiringToggle.title = appState.editWiring ? "Disable simulation edit" : "Enable simulation edit";
+  wiringToggle.setAttribute("aria-label", wiringToggle.title);
   document.getElementById("wiringHint").hidden = !appState.editWiring;
   document.getElementById("systemComm").textContent = appState.activeEvent === "commLost"
     ? "VILLAREAL COMM LOST | DEMO"

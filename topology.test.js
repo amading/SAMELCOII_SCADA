@@ -251,3 +251,18 @@ test("legend stays borderless at the bottom of the feeder diagram", () => {
   assert.match(css, /\.legend-items\s*\{[^}]*flex-wrap:\s*wrap;/);
   assert.match(css, /\.legend-items\s*\{[^}]*justify-content:\s*center;/);
 });
+
+test("control bar uses accessible icon-only controls", () => {
+  const html = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+  const css = fs.readFileSync(path.join(__dirname, "styles.css"), "utf8");
+  const app = fs.readFileSync(path.join(__dirname, "app.js"), "utf8");
+  assert.match(html, /id="wiringToggle"[^>]*aria-label="Enable simulation edit"[^>]*><span class="control-icon edit-icon"/);
+  assert.match(html, /<label class="sr-only" for="demoScenario">Demo scenario<\/label>/);
+  assert.match(html, /id="bottomToggle"[^>]*aria-label="Hide lower panels"[^>]*><span class="control-icon panel-icon"/);
+  assert.match(css, /\.scenario-control select\s*\{[^}]*opacity:\s*0;/);
+  assert.match(app, /bottomToggle\.setAttribute\("aria-label", bottomToggle\.title\)/);
+  assert.match(app, /wiringToggle\.setAttribute\("aria-label", wiringToggle\.title\)/);
+  for (const icon of ["pencil-ruler", "list-filter", "panel-bottom-close", "panel-bottom-open"]) {
+    assert.ok(fs.existsSync(path.join(__dirname, "assets", `lucide-${icon}.svg`)));
+  }
+});

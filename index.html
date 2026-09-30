@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>SCADA Grid Control</title>
-    <link rel="stylesheet" href="./styles.css?v=20261001-large-clock" />
+    <link rel="stylesheet" href="./styles.css?v=20261001-icon-controls" />
   </head>
   <body>
     <main class="dashboard-shell">
@@ -36,11 +36,12 @@
       </header>
 
       <section class="control-bar" aria-label="Demo state controls">
-        <button class="demo-button wiring-toggle" id="wiringToggle" type="button" aria-pressed="false">Simulation Edit</button>
+        <button class="demo-button icon-button wiring-toggle" id="wiringToggle" type="button" aria-pressed="false" aria-label="Enable simulation edit" title="Enable simulation edit"><span class="control-icon edit-icon" aria-hidden="true"></span></button>
         <span class="wiring-hint" id="wiringHint" hidden>Draft simulation only. Drag NGCP to transformer or transformer to feeder; select a feeder tie for transfer preview. No field commands are sent.</span>
         <div class="scenario-control">
-          <label for="demoScenario">Demo Scenario</label>
-          <select id="demoScenario" aria-label="Demo scenario">
+          <span class="control-icon scenario-icon" aria-hidden="true"></span>
+          <label class="sr-only" for="demoScenario">Demo scenario</label>
+          <select id="demoScenario" title="Demo scenario">
             <option value="normal">Normal</option>
             <option value="t1Energized">Catbalogan T1 Energized</option>
             <option value="t2Off">Catbalogan T2 Off</option>
@@ -48,7 +49,7 @@
             <option value="commLost">Comm Lost / Stale Data</option>
           </select>
         </div>
-        <button class="demo-button panels-toggle" id="bottomToggle" type="button" aria-expanded="true" aria-controls="bottomGrid" title="Hide lower panels"><span class="toggle-icon" aria-hidden="true">−</span> Lower Panels</button>
+        <button class="demo-button icon-button panels-toggle" id="bottomToggle" type="button" aria-expanded="true" aria-controls="bottomGrid" aria-label="Hide lower panels" title="Hide lower panels"><span class="control-icon panel-icon" aria-hidden="true"></span></button>
       </section>
 
       <section class="main-grid">
@@ -151,6 +152,6 @@
     </aside>
 
     <script src="./topology.js"></script>
-    <script src="./app.js?v=20261001-side-log"></script>
+    <script src="./app.js?v=20261001-icon-controls"></script>
   </body>
 </html>
