@@ -214,11 +214,12 @@ test("visual power effects follow energized state and respect reduced motion", (
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)\s*\{[^}]*\.transformer-visual\.energized[^}]*animation:\s*none;/);
 });
 
-test("transformer drops run vertically into their bus and end at its edge when offset", () => {
+test("transformer drops enter the center of their bus section", () => {
   const run = dashboard();
-  assert.equal(run("routeTransformerDrop({ x: 50, y: 10 }, 100, 20, 80)"), "M 50 10 V 100");
-  assert.equal(run("routeTransformerDrop({ x: 10, y: 10 }, 100, 20, 80)"), "M 10 10 V 100 H 20");
-  assert.equal(run("routeTransformerDrop({ x: 90, y: 10 }, 100, 20, 80)"), "M 90 10 V 100 H 80");
+  assert.equal(run("routeTransformerDrop({ x: 50, y: 10 }, 100, 20, 80, 60)"), "M 50 10 V 100");
+  assert.equal(run("routeTransformerDrop({ x: 10, y: 10 }, 100, 20, 80, 60)"), "M 10 10 V 60 H 50 V 100");
+  assert.equal(run("routeTransformerDrop({ x: 90, y: 10 }, 100, 20, 80, 60)"), "M 90 10 V 60 H 50 V 100");
+  assert.equal(run("routeTransformerDrop({ x: 90, y: 10 }, 100, 20, 80, 99)"), "M 90 10 V 92 H 50 V 100");
 });
 
 test("transformer readouts show measurements and flag stale values", () => {
@@ -301,13 +302,25 @@ test("display settings keep status colors and wiring markup intact", () => {
   const css = read("src/css/styles.css");
   assert.match(html, /id="settingsToggle"[^>]*aria-controls="settingsPanel"/);
   assert.match(html, /id="settingsPanel"[^>]*hidden/);
-  assert.match(css, /body\[data-surface="clean"\] \.feeder-card\.stale/);
+  assert.match(css, /\.feeder-card\.stale::before\s*\{[^}]*background:\s*var\(--amber\)/);
   assert.match(css, /body\[data-grid="off"\] \.diagram-panel/);
   assert.match(css, /body\[data-motion="off"\] \.wire-pulse\s*\{\s*display:\s*none/);
   assert.ok(fs.existsSync(path.join(root, "assets", "icons", "lucide-settings-2.svg")));
   const run = dashboard();
   run('appState.activeEvent = "commLost"');
   assert.equal(run('statusClass(getScenario().substations[2].transformers[0])'), "stale");
+});
+
+test("feeder cards keep status fills without glow, and logs are outlined only", () => {
+  const css = read("src/css/styles.css");
+  assert.match(css, /\.feeder-card\s*\{[^}]*background:\s*#102733;/);
+  assert.match(css, /\.feeder-card\.off\s*\{[^}]*background:\s*#271e26;/);
+  assert.match(css, /\.feeder-card\.stale\s*\{[^}]*background:\s*#27261f;/);
+  assert.doesNotMatch(css, /\.feeder-card[^{]*\{[^}]*box-shadow/);
+  assert.doesNotMatch(css, /@keyframes feeder-beacon\s*\{[^}]*box-shadow/);
+  assert.doesNotMatch(css, /\.feeder-card[^{]*dl\s*\{[^}]*background:/);
+  assert.match(css, /\.side-log-list li\s*\{[^}]*background:\s*transparent;/);
+  assert.match(css, /\.event-panel li\s*\{[^}]*background:\s*transparent;/);
 });
 
 test("normal-mode fluctuation stays bounded around nominal feeder values", () => {

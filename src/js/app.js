@@ -493,7 +493,7 @@ function renderLiveLogs() {
   const newestId = appState.liveLog[0]?.id;
   list.innerHTML = appState.liveLog.map((entry) => `
     <li class="${entry.type.toLowerCase()} ${entry.id === newestId && entry.id !== appState.lastRenderedLogId ? "fresh" : ""}">
-      <div class="side-log-meta"><span class="side-log-type">${escapeHtml(entry.type)}</span><time>${escapeHtml(entry.time)}</time></div>
+      <div class="side-log-meta"><time>${escapeHtml(entry.time)}</time><span class="side-log-type">${escapeHtml(entry.type)}</span></div>
       <p>${escapeHtml(entry.text)}</p>
       <small>${escapeHtml(entry.detail)}</small>
     </li>
@@ -823,12 +823,12 @@ function fitBusEndpoints(panel) {
 
 }
 
-function routeTransformerDrop(from, busY, firstBusX, lastBusX) {
-  const busStart = Math.min(firstBusX, lastBusX);
-  const busEnd = Math.max(firstBusX, lastBusX);
-  const joinX = Math.min(Math.max(from.x, busStart), busEnd);
-  const vertical = `M ${from.x} ${from.y} V ${busY}`;
-  return Math.abs(joinX - from.x) < 1 ? vertical : `${vertical} H ${joinX}`;
+// Drop from the transformer, jog at jogY, then enter the bus section at its center.
+function routeTransformerDrop(from, busY, firstBusX, lastBusX, jogY) {
+  const centerX = (firstBusX + lastBusX) / 2;
+  if (Math.abs(centerX - from.x) < 1) return `M ${from.x} ${from.y} V ${busY}`;
+  const laneY = Math.min(Math.max(jogY ?? (from.y + busY) / 2, from.y + 8), busY - 8);
+  return `M ${from.x} ${from.y} V ${laneY} H ${centerX} V ${busY}`;
 }
 
 function drawWires(scenario) {
@@ -843,6 +843,8 @@ function drawWires(scenario) {
   svg.style.width = `${width}px`;
   svg.style.height = `${height}px`;
   const paths = [];
+  const busLabel = document.querySelector(".bus-label");
+  const jogY = busLabel ? busLabel.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop - 10 : undefined;
 
   scenario.substations.flatMap((substation) => substation.transformers).forEach((transformer) => {
     const outputPort = document.querySelector(`[data-port-type="transformer-output"][data-port-id="${transformer.id}"]`);
@@ -854,7 +856,7 @@ function drawWires(scenario) {
     const to = pointInDiagram(bus, panel);
     const firstBusX = pointInDiagram(segments[0], panel).x;
     const lastBusX = pointInDiagram(segments[segments.length - 1], panel).x;
-    const route = routeTransformerDrop(from, to.y, firstBusX, lastBusX);
+    const route = routeTransformerDrop(from, to.y, firstBusX, lastBusX, jogY);
     const state = statusClass(transformer);
     paths.push(`<path class="wire-path trunk ${state}" d="${route}"/>`);
     if (state === "energized") {

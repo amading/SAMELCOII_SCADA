@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>SCADA Grid Control</title>
-    <link rel="stylesheet" href="./src/css/styles.css?v=20261001-settings" />
+    <link rel="stylesheet" href="./src/css/styles.css?v=20261001-log-list" />
   </head>
   <body>
     <main class="dashboard-shell">
@@ -97,8 +97,9 @@
         </aside>
 
         <section class="diagram-panel">
-          <div class="ngcp-node equipment-node energized" data-equipment="NGCP" tabindex="0">
-            <span>NGCP</span>
+          <div class="ngcp-node equipment-node energized" data-equipment="NGCP" tabindex="0" aria-label="NGCP grid source">
+            <img class="ngcp-node-logo" src="./assets/images/ngcp-seal.png" alt="" aria-hidden="true" />
+            <span class="ngcp-node-copy"><strong>NGCP</strong></span>
             <span class="wire-port output" data-port-type="source" data-port-id="NGCP" title="Drag power source to a transformer"></span>
           </div>
           <div class="vertical-drop energized"></div>
@@ -170,6 +171,6 @@
     </aside>
 
     <script src="./src/js/topology.js"></script>
-    <script src="./src/js/app.js?v=20261001-settings"></script>
+    <script src="./src/js/app.js?v=20261001-log-list"></script>
   </body>
 </html>
