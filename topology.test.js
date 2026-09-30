@@ -181,4 +181,5 @@ test("transformer readouts show measurements and flag stale values", () => {
   assert.match(css, /\.transformer-readout\s*\{[^}]*right:\s*calc\(50% \+ 44px\)/);
   assert.match(css, /\.substation-row\s*\{[^}]*padding-left:\s*48px/);
   assert.match(css, /\.section-bus \.bus-caption\s*\{[^}]*background:\s*transparent;[^}]*text-shadow:/);
+  assert.match(css, /\.transformer-copy\s*\{[^}]*text-shadow:\s*var\(--wire-label-shadow\)/);
 });

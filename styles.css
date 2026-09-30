@@ -15,6 +15,7 @@
   --red: #ff6872;
   --muted: #9bafba;
   --wire-off: #617382;
+  --wire-label-shadow: 0 0 2px #06141a, 0 0 4px #06141a, 0 0 7px #06141a, 0 1px 3px #06141a;
 }
 
 * { box-sizing: border-box; }
@@ -137,7 +138,7 @@ button:focus-visible, [tabindex="0"]:focus-visible { outline: 2px solid #fff; ou
 }
 @keyframes flow-down { to { background-position: 0 25px; } }
 .power-bus { position: relative; height: 4px; margin: 0 1.5%; }
-.power-bus span { position: absolute; top: -17px; left: 12px; padding: 0 7px; color: var(--cyan); background: transparent; font-size: .65rem; font-weight: 800; text-shadow: 0 1px 2px #02090e, 0 0 5px #02090ecc; }
+.power-bus span { position: absolute; top: -17px; left: 12px; padding: 0 7px; color: var(--cyan); background: transparent; font-size: .65rem; font-weight: 800; text-shadow: var(--wire-label-shadow); }
 .power-bus i { position: absolute; width: 7px; height: 7px; top: -2px; border: 1px solid #d4f9ff; background: #147af0; box-shadow: 0 0 8px var(--cyan); }
 .power-bus i:nth-of-type(1) { left: 17%; }
 .power-bus i:nth-of-type(2) { left: 45%; }
@@ -147,7 +148,7 @@ button:focus-visible, [tabindex="0"]:focus-visible { outline: 2px solid #fff; ou
 .substation-row { display: grid; grid-template-columns: minmax(0, 1.55fr) repeat(3, minmax(0, 1fr)); gap: 18px; margin: 0 1.5%; padding-left: 48px; }
 .substation-card { position: relative; display: grid; grid-template-rows: 20px auto auto auto; min-width: 0; text-align: center; cursor: pointer; }
 .drop-line { grid-column: 1; grid-row: 1 / 4; justify-self: center; align-self: stretch; width: 4px; height: auto; margin: 0; }
-.substation-card h2, .substation-card > p { grid-column: 1; position: relative; z-index: 1; text-shadow: 0 1px 2px #02090e, 0 0 5px #02090ecc; }
+.substation-card h2, .substation-card > p { grid-column: 1; position: relative; z-index: 1; text-shadow: var(--wire-label-shadow); }
 .substation-card h2 { grid-row: 2; margin: 8px 0 0; color: #d9f4fa; font-size: 1.05rem; }
 .substation-card > p { grid-row: 3; margin: 0 0 10px; color: #9bc0d0; font-size: .72rem; }
 .transformer-stack { position: relative; grid-column: 1; grid-row: 4; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-content: start; justify-items: center; }
@@ -204,7 +205,7 @@ button:focus-visible, [tabindex="0"]:focus-visible { outline: 2px solid #fff; ou
 .stale .fan.running { animation: none; }
 .fan.stopped { border-color: #667a88; background: conic-gradient(#667a88 0 25%, transparent 25% 50%, #667a88 50% 75%, transparent 75%); box-shadow: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.transformer-copy { width: 100%; min-width: 0; }
+.transformer-copy { position: relative; z-index: 3; width: 100%; min-width: 0; text-shadow: var(--wire-label-shadow); }
 .transformer-copy > strong, .transformer-copy > span, .transformer-copy > small { display: block; }
 .transformer-nameplate { display: flex !important; flex-direction: column; align-items: center; gap: 3px; color: #fff; font-size: .86rem; }
 .transformer-nameplate span { font-size: .72rem; color: #9ccbdd; }
@@ -222,12 +223,12 @@ button:focus-visible, [tabindex="0"]:focus-visible { outline: 2px solid #fff; ou
 .feeder-card dd { margin: 0; font-size: .62rem; font-weight: 700; white-space: nowrap; }
 .stale-badge { display: block; margin-top: 6px; color: var(--amber); font-size: .55rem; font-weight: 800; white-space: nowrap; }
 
-.bus-label { display: flex; align-items: baseline; gap: 15px; margin: 22px 4% 6px; color: var(--cyan); font-size: .8rem; font-weight: 800; text-shadow: 0 1px 2px #02090e, 0 0 5px #02090ecc; }
+.bus-label { display: flex; align-items: baseline; gap: 15px; margin: 22px 4% 6px; color: var(--cyan); font-size: .8rem; font-weight: 800; text-shadow: var(--wire-label-shadow); }
 .bus-label span { color: var(--amber); font-size: .64rem; font-weight: 600; text-transform: uppercase; }
 .feeder-grid { display: flex; align-items: flex-start; gap: 20px; margin-top: 20px; padding: 0 0 58px; }
 .feeder-group { position: relative; flex: var(--feeder-count) 1 0; min-width: 96px; }
 .section-bus { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(var(--feeder-count), minmax(0, 1fr)); gap: 5px; height: 4px; }
-.section-bus .bus-caption { position: absolute; top: -17px; left: 5px; padding: 0 4px; color: #c1dde6; background: transparent; font-size: .59rem; font-weight: 800; white-space: nowrap; text-shadow: 0 1px 2px #02090e, 0 0 5px #02090ecc; }
+.section-bus .bus-caption { position: absolute; top: -17px; left: 5px; padding: 0 4px; color: #c1dde6; background: transparent; font-size: .59rem; font-weight: 800; white-space: nowrap; text-shadow: var(--wire-label-shadow); }
 .bus-segment { position: relative; min-width: 0; height: 4px; }
 .bus-segment::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; right: -5px; background: var(--wire-off); }
 .bus-segment:first-of-type::before { left: 50%; }
