@@ -146,4 +146,15 @@ test("transformer MVA cards stay portrait while Catbalogan bays remain side by s
   assert.match(css, /\.transformer-stack\.multi\s*\{\s*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(css, /\.transformer-card\s*\{[^}]*display:\s*flex;[^}]*flex-direction:\s*column;/);
   assert.match(css, /\.transformer-nameplate\s*\{[^}]*flex-direction:\s*column;/);
+  assert.match(css, /\.transformer-card\s*\{[^}]*background:\s*transparent;/);
+  assert.doesNotMatch(css, /\.transformer-card\.(?:energized|off|stale)\s*\{[^}]*background:/);
+});
+
+test("visual power effects follow energized state and respect reduced motion", () => {
+  const css = fs.readFileSync(path.join(__dirname, "styles.css"), "utf8");
+  assert.match(css, /\.transformer-visual\.energized\s*\{[^}]*animation:/);
+  assert.match(css, /\.feeder-card\.energized::before\s*\{[^}]*animation:/);
+  assert.match(css, /\.stale \.fan\.running\s*\{[^}]*animation:\s*none;/);
+  assert.match(css, /\.feeder-card\.stale \.load-bar span\s*\{[^}]*background:\s*var\(--amber\)/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)\s*\{[^}]*\.transformer-visual\.energized[^}]*animation:\s*none;/);
 });

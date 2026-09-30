@@ -469,7 +469,7 @@ function renderFeeders(feeders, substations) {
     const assigned = feeders.filter((feeder) => feeder.transformerId === transformer.id);
     const count = Math.max(1, assigned.length);
     return `
-      <section class="feeder-group" style="--feeder-count:${count};min-width:${count * 90}px" aria-label="${substation.name} ${transformer.name} feeder bus">
+      <section class="feeder-group" style="--feeder-count:${count};min-width:${count * 96}px" aria-label="${substation.name} ${transformer.name} feeder bus">
         <div class="section-bus ${statusClass(transformer)}" data-bus-for="${transformer.id}">
           <span class="bus-caption">${substation.code} ${transformer.name}</span>
           ${Array.from({ length: count }, () => '<i class="bus-segment" aria-hidden="true"></i>').join("")}
@@ -483,7 +483,7 @@ function renderFeeders(feeders, substations) {
   const unassigned = feeders.filter((feeder) => !feeder.transformerId);
   if (unassigned.length) {
     groups.push(`
-      <section class="feeder-group unassigned" style="--feeder-count:${unassigned.length};min-width:${unassigned.length * 90}px" aria-label="Unassigned feeders">
+      <section class="feeder-group unassigned" style="--feeder-count:${unassigned.length};min-width:${unassigned.length * 96}px" aria-label="Unassigned feeders">
         <div class="section-bus off">
           <span class="bus-caption">UNASSIGNED</span>
           ${Array.from({ length: unassigned.length }, () => '<i class="bus-segment" aria-hidden="true"></i>').join("")}
