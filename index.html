@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SCADA Grid Control</title>
+    <link rel="stylesheet" href="./styles.css?v=20261001-portrait-mva" />
+  </head>
+  <body>
+    <main class="dashboard-shell">
+      <header class="topbar">
+        <section class="brand-block" aria-label="Utility identity">
+          <img class="utility-logo" src="./assets/samelco-lightning.png" alt="SAMELCO II lightning logo" />
+          <div>
+            <h1>SAMELCO II</h1>
+            <p>Real-Time Distribution Monitoring</p>
+          </div>
+        </section>
+        <section class="title-block">
+          <span>SCADA GRID CONTROL</span>
+          <strong>Modern One-Line Monitoring System</strong>
+        </section>
+        <section class="status-strip" aria-label="System status">
+          <div>
+            <span id="dateText">WED 30 SEP 2026</span>
+            <strong id="timeText">--:--:--</strong>
+          </div>
+          <div class="system-online">
+            <span class="wifi-icon" aria-hidden="true"></span>
+            <div>
+              <strong id="systemState">SIMULATION</strong>
+            <span id="systemComm">DEMO DATA | 4 substations</span>
+            </div>
+          </div>
+        </section>
+      </header>
+
+      <section class="control-bar" aria-label="Demo state controls">
+        <button class="demo-button wiring-toggle" id="wiringToggle" type="button" aria-pressed="false">Simulation Edit</button>
+        <span class="wiring-hint" id="wiringHint" hidden>Draft simulation only. Drag NGCP to transformer or transformer to feeder; select a feeder tie for transfer preview. No field commands are sent.</span>
+        <div class="scenario-control">
+          <label for="demoScenario">Demo Scenario</label>
+          <select id="demoScenario" aria-label="Demo scenario">
+            <option value="normal">Normal</option>
+            <option value="t1Energized">Catbalogan T1 Energized</option>
+            <option value="t2Off">Catbalogan T2 Off</option>
+            <option value="feederTrip">Feeder 10 Trip</option>
+            <option value="commLost">Comm Lost / Stale Data</option>
+          </select>
+        </div>
+        <button class="demo-button panels-toggle" id="bottomToggle" type="button" aria-expanded="true" aria-controls="bottomGrid" title="Hide lower panels"><span class="toggle-icon" aria-hidden="true">−</span> Lower Panels</button>
+      </section>
+
+      <section class="main-grid">
+        <aside class="source-panel equipment-card" data-equipment="NGCP" tabindex="0">
+          <div class="card-title">
+            <div>
+              <h2>NGCP</h2>
+              <p>Grid Source</p>
+            </div>
+            <button class="panel-toggle" id="sourceToggle" type="button" aria-expanded="true" aria-controls="sourceContent" title="Minimize NGCP panel" aria-label="Minimize NGCP panel">−</button>
+          </div>
+          <div id="sourceContent" class="source-content">
+            <img class="source-logo" src="./assets/ngcp-seal.png" alt="National Grid Corporation of the Philippines seal" />
+            <dl class="meter-stack">
+              <div><dt>V</dt><dd id="ngcpVoltage">69.1 kV</dd></div>
+              <div><dt>P</dt><dd id="ngcpPower">18.7 MW</dd></div>
+              <div><dt>Q</dt><dd id="ngcpMvar">4.2 MVAR</dd></div>
+              <div><dt>F</dt><dd id="ngcpFreq">59.99 Hz</dd></div>
+            </dl>
+          </div>
+          <span class="source-rail-label" aria-hidden="true">NGCP</span>
+        </aside>
+
+        <section class="diagram-panel">
+          <div class="ngcp-node equipment-node energized" data-equipment="NGCP" tabindex="0">
+            <span>NGCP</span>
+            <span class="wire-port output" data-port-type="source" data-port-id="NGCP" title="Drag power source to a transformer"></span>
+          </div>
+          <div class="vertical-drop energized"></div>
+          <div class="power-bus energized">
+            <span>POWER BUS</span>
+            <i></i><i></i><i></i><i></i>
+          </div>
+
+          <section class="substation-row" id="substationRow" aria-label="Substations"></section>
+
+          <div class="bus-label">13.8 kV BUS SECTIONS <span>Local wiring draft | feeder ties</span></div>
+
+          <section class="feeder-grid" id="feederGrid" aria-label="Feeders"></section>
+          <svg class="wiring-layer" id="wiringLayer" aria-hidden="true"></svg>
+        </section>
+      </section>
+
+      <section class="bottom-grid" id="bottomGrid">
+        <article class="summary-panel">
+          <h2 id="totalsTitle">System Totals</h2>
+          <div class="metric-grid">
+            <div><span>Total Load</span><strong id="totalLoad">18.72 MW</strong></div>
+            <div><span>Total Current</span><strong id="totalCurrent">1,842 A</strong></div>
+            <div><span>System Voltage</span><strong id="systemVoltage">13.78 kV</strong></div>
+            <div><span>Frequency</span><strong id="systemFrequency">59.99 Hz</strong></div>
+          </div>
+        </article>
+
+        <article class="event-panel">
+          <h2>Alarm / Event Log</h2>
+          <div class="event-tabs" aria-label="Filter events">
+            <button class="active" data-filter="ALL">All</button>
+            <button data-filter="ALARM">Alarms</button>
+            <button data-filter="WARNING">Warnings</button>
+            <button data-filter="EVENT">Events</button>
+          </div>
+          <ul id="eventLog"></ul>
+        </article>
+
+        <article class="summary-panel">
+          <h2>Substation Summary</h2>
+          <table>
+            <thead>
+              <tr><th>Substation</th><th>Load</th><th>Transformers</th><th>Status</th></tr>
+            </thead>
+            <tbody id="substationSummary"></tbody>
+          </table>
+        </article>
+
+        <article class="legend-panel">
+          <h2>Legend</h2>
+          <div class="legend-row"><span class="feeder-swatch energized"></span>Feeder powered</div>
+          <div class="legend-row"><span class="feeder-swatch off"></span>Feeder no power / trip</div>
+          <div class="legend-row"><span class="line energized"></span>Energized line</div>
+          <div class="legend-row"><span class="line off"></span>De-energized line</div>
+          <div class="legend-row"><span class="breaker closed"></span>Breaker closed</div>
+          <div class="legend-row"><span class="breaker open"></span>Breaker open / off</div>
+          <div class="legend-row"><span class="breaker trip"></span>Breaker tripped</div>
+          <div class="legend-row"><span class="tie-symbol"></span>Feeder tie closed (draft)</div>
+          <div class="legend-row"><span class="quality stale"></span>Stale data / comm lost</div>
+        </article>
+      </section>
+    </main>
+
+    <aside class="detail-panel" id="detailPanel" aria-live="polite" aria-label="Equipment detail">
+      <button class="close-panel" id="closePanel" aria-label="Close equipment detail">x</button>
+      <div id="detailContent"></div>
+    </aside>
+
+    <script src="./topology.js"></script>
+    <script src="./app.js?v=20261001-scenario"></script>
+  </body>
+</html>
